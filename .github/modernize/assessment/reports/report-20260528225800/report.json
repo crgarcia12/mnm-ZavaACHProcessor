@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-28T22:58:00.0000000Z",
+    "id": "20260528225800",
+    "tool": "assessment"
+  },
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "mnm-ZavaACHProcessor",
+        "appName": "mnm-ZavaACHProcessor",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [],
+        "tools": [
+          "Gradle"
+        ]
+      },
+      "incidents": []
+    }
+  ],
+  "security": [
+    {
+      "id": "CVE-2025-59250",
+      "title": "JDBC Driver for SQL Server has improper input validation issue",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2025-59250](https://github.com/advisories/GHSA-m494-w24q-6f7w): JDBC Driver for SQL Server has improper input validation issue\n\nSeverity: HIGH\n\nAffected dependencies:\n- com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre8 (declared at build.gradle:13) \u2014 recommended fix: upgrade to a patched version",
+      "evidence": {
+        "files": [
+          "build.gradle:13"
+        ],
+        "explanation": "[CVE-2025-59250](https://github.com/advisories/GHSA-m494-w24q-6f7w): JDBC Driver for SQL Server has improper input validation issue\n\nSeverity: HIGH\n\nAffected dependencies:\n- com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre8 (declared at build.gradle:13) \u2014 recommended fix: upgrade to a patched version"
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-259",
+      "title": "Use of Hard-coded Password",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/achprocessor/Main.java:258",
+          "src/main/java/com/zavabank/achprocessor/Main.java:259",
+          "src/main/resources/achprocessor.properties:3",
+          "src/main/resources/achprocessor.properties:4"
+        ],
+        "explanation": "The application contains hard-coded default RabbitMQ credentials (username/password set to \"guest\") in both source code defaults and configuration properties."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-798",
+      "title": "Use of Hard-coded Credentials",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/achprocessor/Main.java:258",
+          "src/main/java/com/zavabank/achprocessor/Main.java:259",
+          "src/main/resources/achprocessor.properties:3",
+          "src/main/resources/achprocessor.properties:4"
+        ],
+        "explanation": "The application contains hard-coded default RabbitMQ credentials (username/password set to \"guest\") in both source code defaults and configuration properties."
+      },
+      "storyPoint": 5
+    }
+  ]
+}
