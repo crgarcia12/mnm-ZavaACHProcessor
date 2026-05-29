@@ -1,0 +1,180 @@
+{
+  "input_name": "CWE - Code Quality",
+  "analysis_method": "LLM",
+  "status": "success",
+  "result": {
+    "finding": "Assessed 16 CWE rules in Code Quality: 2 FOUND, 14 NOT_FOUND",
+    "confidence": "high",
+    "evidence": ["Scanned src/main/java/com/zavabank/achprocessor/Main.java for code quality patterns"],
+    "values": [
+      {
+        "id": "CWE-130",
+        "name": "Improper Handling of Length Parameter Inconsistency",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product parses a formatted message or structure, but it does not handle or incorrectly handles a length field that is inconsistent with the actual length of the associated data.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/achprocessor/Main.java"],
+          "explanation": "In parseNachaFile(), the NACHA batch control record (type '8') provides entryCount (line 140) and totalDebit/totalCredit totals that define the expected number of entries and their aggregate amounts. These values are stored in AchBatch.entryCount, AchBatch.totalDebit, and AchBatch.totalCredit (lines 415-416) but are never validated against the actual number of AchEntry objects collected or the summed amounts. The application proceeds to post transactions regardless of whether the declared entry count matches the parsed count, allowing a malformed or tampered NACHA file to be processed without detection."
+        }
+      },
+      {
+        "id": "CWE-456",
+        "name": "Missing Initialization of a Variable",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 2,
+        "description": "The product does not initialize critical variables, which causes the execution environment to use unexpected values.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-457",
+        "name": "Use of Uninitialized Variable",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 2,
+        "description": "The code uses a variable that has not been initialized, leading to unpredictable or unintended results.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-477",
+        "name": "Use of Obsolete Function",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/achprocessor/Main.java"],
+          "explanation": "Two obsolete API usages are present: (1) java.net.HttpURLConnection (line 14, line 164) — a legacy low-level HTTP API that predates Java 11's java.net.http.HttpClient; it lacks HTTP/2 support, async I/O, and requires manual stream management. (2) java.text.SimpleDateFormat with java.util.Date (line 21, line 377 in nowIso()) — replaced by java.time.Instant and java.time.format.DateTimeFormatter since Java 8; SimpleDateFormat is not thread-safe and is generally considered obsolete in modern Java."
+        }
+      },
+      {
+        "id": "CWE-570",
+        "name": "Expression is Always False",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product contains an expression that will always evaluate to false.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-571",
+        "name": "Expression is Always True",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product contains an expression that will always evaluate to true.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-606",
+        "name": "Unchecked Input for Loop Condition",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not properly check inputs that are used for loop conditions, potentially leading to a denial of service or other consequences because of excessive looping.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-665",
+        "name": "Improper Initialization",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not initialize or incorrectly initializes a resource, which might leave the resource in an unexpected state when it is accessed or used.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-681",
+        "name": "Incorrect Conversion between Numeric Types",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "When converting from one data type to another, such as long to integer, data can be omitted or translated in a way that produces unexpected values. If the resulting values are used in a sensitive context, then dangerous behaviors may occur.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-682",
+        "name": "Incorrect Calculation",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product performs a calculation that generates incorrect or unintended results that are later used in security-critical decisions or resource management.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-772",
+        "name": "Missing Release of Resource after Effective Lifetime",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not release a resource after its effective lifetime has ended, i.e., after the resource is no longer needed.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-775",
+        "name": "Missing Release of File Descriptor or Handle after Effective Lifetime",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not release a file descriptor or handle after its effective lifetime has ended, i.e., after the file descriptor/handle is no longer needed.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-783",
+        "name": "Operator Precedence Logic Error",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product uses an expression in which operator precedence causes incorrect logic to be used.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-789",
+        "name": "Memory Allocation with Excessive Size Value",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product allocates memory based on an untrusted, large size value, but it does not ensure that the size is within expected limits, allowing arbitrary amounts of memory to be allocated.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-835",
+        "name": "Loop with Unreachable Exit Condition ('Infinite Loop')",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product contains an iteration or loop with an exit condition that cannot be reached, i.e., an infinite loop.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-1057",
+        "name": "Data Access Operations Outside of Expected Data Manager Component",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product uses a dedicated, central data manager component as required by design, but it contains code that performs data-access operations that do not use this data manager.",
+        "evidence": { "files": [], "explanation": "" }
+      }
+    ]
+  },
+  "execution_time_seconds": 0,
+  "timestamp": ""
+}
