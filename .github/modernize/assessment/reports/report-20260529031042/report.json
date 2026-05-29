@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-29T03:10:42Z",
+    "tool": "AppCAT",
+    "version": "generated"
+  },
+  "rules": {
+    "java-upgrade-001": {
+      "title": "Upgrade Java 8 runtime baseline",
+      "description": "Project is configured for Java 8 and should be upgraded for modern platform compatibility.",
+      "severity": "mandatory",
+      "effort": 5,
+      "labels": ["domain=java-upgrade"]
+    },
+    "cloud-readiness-001": {
+      "title": "Externalize filesystem paths for container portability",
+      "description": "ACH processing relies on fixed local filesystem paths that need cloud-native storage strategy.",
+      "severity": "potential",
+      "effort": 3,
+      "labels": ["domain=cloud-readiness"]
+    }
+  },
+  "projects": [
+    {
+      "name": "mnm-ZavaACHProcessor",
+      "properties": {
+        "repo": "mnm-ZavaACHProcessor",
+        "languages": ["Java"],
+        "frameworks": ["JDK"],
+        "tools": ["Gradle"],
+        "jdkVersion": "1.8",
+        "applicationType": "Batch Processor"
+      },
+      "incidents": [
+        {
+          "ruleId": "java-upgrade-001",
+          "location": "build.gradle",
+          "line": 17,
+          "targets": {
+            "aks": {
+              "effort": 5
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-readiness-001",
+          "location": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 39,
+          "targets": {
+            "aks": {
+              "effort": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "security": [],
+  "rearchitect": []
+}
