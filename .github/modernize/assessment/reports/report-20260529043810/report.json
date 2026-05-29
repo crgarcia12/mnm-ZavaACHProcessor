@@ -1,0 +1,380 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-29T04:38:10.000Z",
+    "appCATVersion": "1.0.0",
+    "targetIds": [
+      "azure-appservice",
+      "azure-aks",
+      "azure-container-apps"
+    ],
+    "targetDisplayNames": [
+      "Azure App Service",
+      "Azure Kubernetes Service",
+      "Azure Container Apps"
+    ],
+    "assessmentDomains": [
+      "java-upgrade",
+      "cloud-readiness"
+    ]
+  },
+  "rules": {
+    "java-upgrade-001": {
+      "ruleId": "java-upgrade-001",
+      "title": "Java 8 is end-of-life \u2014 upgrade to a supported LTS runtime",
+      "description": "The project targets Java 8 (sourceCompatibility = JavaVersion.VERSION_1_8 and the runtime base image is eclipse-temurin:8-jre). Java 8 is past end-of-life for most community distributions. Upgrading to Java 17 LTS or Java 21 LTS is required for long-term support, modern language features, and compatibility with current Azure-hosted runtimes.",
+      "category": "java-upgrade",
+      "effort": 3,
+      "criticality": "mandatory",
+      "labels": [
+        "java-upgrade",
+        "java-version"
+      ]
+    },
+    "java-upgrade-002": {
+      "ruleId": "java-upgrade-002",
+      "title": "Gradle build uses Java 8 source/target compatibility",
+      "description": "The build.gradle sets both sourceCompatibility and targetCompatibility to JavaVersion.VERSION_1_8. When upgrading the runtime these settings must be updated to reflect the new target version (e.g., VERSION_17 or VERSION_21).",
+      "category": "java-upgrade",
+      "effort": 1,
+      "criticality": "mandatory",
+      "labels": [
+        "java-upgrade",
+        "build-config"
+      ]
+    },
+    "java-upgrade-003": {
+      "ruleId": "java-upgrade-003",
+      "title": "Gradle Shadow plugin version 7.1.2 does not support Gradle 8+",
+      "description": "The Shadow plugin (com.github.johnrengelman.shadow) version 7.1.2 is not compatible with Gradle 8 and above. When upgrading the Gradle wrapper to 8.x (recommended when moving to Java 17/21), the Shadow plugin must be upgraded to version 8.x or replaced with the maintained community fork (gradle.shadow plugin).",
+      "category": "java-upgrade",
+      "effort": 1,
+      "criticality": "potential",
+      "labels": [
+        "java-upgrade",
+        "build-config",
+        "gradle"
+      ]
+    },
+    "cloud-001": {
+      "ruleId": "cloud-001",
+      "title": "No liveness or readiness health check endpoint",
+      "description": "The application exposes no HTTP health-check endpoint. Container orchestration platforms (AKS, Azure Container Apps) require readiness and liveness probes to manage pod lifecycle and rolling deployments safely. Without a health endpoint, the platform cannot determine whether the container is ready to serve traffic or needs to be restarted.",
+      "category": "cloud-readiness",
+      "effort": 3,
+      "criticality": "mandatory",
+      "labels": [
+        "cloud-readiness",
+        "health-checks",
+        "kubernetes"
+      ]
+    },
+    "cloud-002": {
+      "ruleId": "cloud-002",
+      "title": "Outbound HTTP call uses plain HTTP (no TLS)",
+      "description": "The call to the Ledger API uses a plain HTTP URL (http://zavaledger:8080). In a cloud environment, inter-service communication should use HTTPS/TLS to protect data in transit, including sensitive financial fields such as account numbers and routing numbers that are transmitted in the POST body.",
+      "category": "cloud-readiness",
+      "effort": 2,
+      "criticality": "mandatory",
+      "labels": [
+        "cloud-readiness",
+        "security",
+        "tls"
+      ]
+    },
+    "cloud-003": {
+      "ruleId": "cloud-003",
+      "title": "RabbitMQ connection is created per-publish operation (no connection pooling)",
+      "description": "A new com.rabbitmq.client.Connection and Channel are created for every call to publishRabbitEvent(). This pattern causes high connection overhead and latency under load, and can exhaust broker connection limits. A shared connection with channel multiplexing (or a connection pool) should be used instead.",
+      "category": "cloud-readiness",
+      "effort": 3,
+      "criticality": "potential",
+      "labels": [
+        "cloud-readiness",
+        "messaging",
+        "performance"
+      ]
+    },
+    "cloud-004": {
+      "ruleId": "cloud-004",
+      "title": "Filesystem-based ACH ingestion uses shared mount path",
+      "description": "The processor polls /shared/ach-incoming on the local filesystem. In a cloud deployment (AKS, Container Apps), this path must be backed by a persistent volume (Azure Files, Azure Disk) with ReadWriteMany access when running multiple replicas, or replaced with an Azure Blob Storage trigger / Service Bus queue for cloud-native file ingestion.",
+      "category": "cloud-readiness",
+      "effort": 5,
+      "criticality": "mandatory",
+      "labels": [
+        "cloud-readiness",
+        "storage",
+        "filesystem"
+      ]
+    },
+    "cloud-005": {
+      "ruleId": "cloud-005",
+      "title": "No structured logging \u2014 uses System.out.println",
+      "description": "All application logging uses System.out.println via a plain log() helper method. Cloud-native observability platforms (Azure Monitor, Application Insights) work best with structured JSON logs. Replacing the log() helper with a structured logging framework (SLF4J + Logback/Log4j2) and emitting JSON-formatted log entries is recommended.",
+      "category": "cloud-readiness",
+      "effort": 2,
+      "criticality": "potential",
+      "labels": [
+        "cloud-readiness",
+        "logging",
+        "observability"
+      ]
+    },
+    "cloud-006": {
+      "ruleId": "cloud-006",
+      "title": "No metrics or distributed tracing instrumentation",
+      "description": "The application has no Micrometer, OpenTelemetry, or Application Insights SDK integration. Cloud deployments benefit from metrics (request counts, error rates, processing latency) and distributed traces to diagnose issues across service boundaries. Adding instrumentation is recommended before deploying to production.",
+      "category": "cloud-readiness",
+      "effort": 3,
+      "criticality": "potential",
+      "labels": [
+        "cloud-readiness",
+        "observability",
+        "metrics"
+      ]
+    },
+    "cloud-007": {
+      "ruleId": "cloud-007",
+      "title": "No retry or circuit-breaker policy for Ledger HTTP calls",
+      "description": "Calls to the Ledger API use java.net.HttpURLConnection with a fixed timeout but no retry logic, circuit breaker, or bulkhead pattern. A transient network error causes the entire ACH file to be moved to the error directory. Introducing a retry policy (e.g., Resilience4j) with exponential backoff would improve resilience.",
+      "category": "cloud-readiness",
+      "effort": 3,
+      "criticality": "potential",
+      "labels": [
+        "cloud-readiness",
+        "resilience",
+        "http"
+      ]
+    },
+    "cloud-008": {
+      "ruleId": "cloud-008",
+      "title": "Sensitive credentials stored in plaintext properties file",
+      "description": "RabbitMQ credentials (rabbitmq.username and rabbitmq.password) are stored in plaintext in achprocessor.properties with the default values guest/guest. In a cloud deployment, secrets must be stored in a managed secrets store (Azure Key Vault, Kubernetes Secrets) and injected at runtime. The properties file should not contain production credentials.",
+      "category": "cloud-readiness",
+      "effort": 2,
+      "criticality": "mandatory",
+      "labels": [
+        "cloud-readiness",
+        "security",
+        "secrets"
+      ]
+    },
+    "cloud-009": {
+      "ruleId": "cloud-009",
+      "title": "java.net.HttpURLConnection is a low-level legacy HTTP API",
+      "description": "The application uses java.net.HttpURLConnection for outbound HTTP calls. This class requires manual resource management (closing streams and connections), lacks HTTP/2 support, and does not support async I/O. Java 11+ includes java.net.http.HttpClient which provides a modern, higher-level API with HTTP/2 and async support.",
+      "category": "java-upgrade",
+      "effort": 2,
+      "criticality": "optional",
+      "labels": [
+        "java-upgrade",
+        "http-client",
+        "modernization"
+      ]
+    },
+    "cloud-010": {
+      "ruleId": "cloud-010",
+      "title": "Declared dependency mssql-jdbc is unused in current code",
+      "description": "The build.gradle declares com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre8 as a runtime dependency, but no SQL connection or JDBC API call is present in the source code. This increases image size and attack surface unnecessarily. If the dependency is intended for future use, it should be removed until needed; if it was accidentally included, it should be removed immediately.",
+      "category": "cloud-readiness",
+      "effort": 1,
+      "criticality": "optional",
+      "labels": [
+        "cloud-readiness",
+        "dependencies",
+        "cleanup"
+      ]
+    }
+  },
+  "projects": [
+    {
+      "properties": {
+        "appName": "ZavaACHProcessor",
+        "repo": "mnm-ZavaACHProcessor",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [],
+        "tools": [
+          "Gradle 7.6"
+        ],
+        "jdkVersion": "8"
+      },
+      "incidents": [
+        {
+          "ruleId": "java-upgrade-001",
+          "file": "Dockerfile",
+          "line": 2,
+          "variables": {}
+        },
+        {
+          "ruleId": "java-upgrade-001",
+          "file": "build.gradle",
+          "line": 14,
+          "variables": {}
+        },
+        {
+          "ruleId": "java-upgrade-002",
+          "file": "build.gradle",
+          "line": 14,
+          "variables": {}
+        },
+        {
+          "ruleId": "java-upgrade-003",
+          "file": "build.gradle",
+          "line": 4,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-001",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 1,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-002",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 136,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-003",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 216,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-004",
+          "file": "src/main/resources/achprocessor.properties",
+          "line": 11,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-005",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 319,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-006",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 1,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-007",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 131,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-008",
+          "file": "src/main/resources/achprocessor.properties",
+          "line": 3,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-009",
+          "file": "src/main/java/com/zavabank/achprocessor/Main.java",
+          "line": 136,
+          "variables": {}
+        },
+        {
+          "ruleId": "cloud-010",
+          "file": "build.gradle",
+          "line": 10,
+          "variables": {}
+        }
+      ]
+    }
+  ],
+  "security": [
+    {
+      "id": "CVE-2025-59250",
+      "title": "JDBC Driver for SQL Server has improper input validation issue",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "Improper input validation in JDBC Driver for SQL Server allows an unauthorized attacker to perform spoofing over a network.",
+      "evidence": {
+        "files": [
+          "build.gradle:13"
+        ],
+        "explanation": "CVE-2025-59250: JDBC Driver for SQL Server has improper input validation issue. Severity: HIGH (CVSS 8.1). Affected: com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre8. Upgrade to 12.6.5.jre8 or remove the unused dependency."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-130",
+      "title": "Improper Handling of Length Parameter Inconsistency",
+      "category": "Code Quality",
+      "severity": "potential",
+      "description": "The product parses a formatted message or structure, but it does not handle or incorrectly handles a length field that is inconsistent with the actual length of the associated data.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/achprocessor/Main.java"
+        ],
+        "explanation": "In parseNachaFile(), the NACHA batch control record (type '8') provides entryCount and totalDebit/totalCredit totals but these are never validated against the actual count and sums of parsed AchEntry objects."
+      },
+      "storyPoint": 3
+    },
+    {
+      "id": "CWE-477",
+      "title": "Use of Obsolete Function",
+      "category": "Code Quality",
+      "severity": "optional",
+      "description": "The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/achprocessor/Main.java"
+        ],
+        "explanation": "Uses java.net.HttpURLConnection (obsolete since Java 11 HttpClient) and java.text.SimpleDateFormat/java.util.Date (replaced by java.time since Java 8)."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-259",
+      "title": "Use of Hard-coded Password",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "evidence": {
+        "files": [
+          "src/main/resources/achprocessor.properties",
+          "src/main/java/com/zavabank/achprocessor/Main.java"
+        ],
+        "explanation": "RabbitMQ password 'guest' is hardcoded in achprocessor.properties (committed to source control) and as a fallback default in Main.java line 259."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-778",
+      "title": "Insufficient Logging",
+      "category": "Credentials & Secrets",
+      "severity": "potential",
+      "description": "When a security-critical event occurs, the product either does not record the event or omits important details about the event when logging it.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/achprocessor/Main.java"
+        ],
+        "explanation": "PCI/PII financial data is processed without structured audit logging. Auth failures, RabbitMQ errors, and file-processing outcomes are logged to stdout without timestamps, correlation IDs, or severity levels."
+      },
+      "storyPoint": 3
+    },
+    {
+      "id": "CWE-798",
+      "title": "Use of Hard-coded Credentials",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "evidence": {
+        "files": [
+          "src/main/resources/achprocessor.properties",
+          "src/main/java/com/zavabank/achprocessor/Main.java"
+        ],
+        "explanation": "RabbitMQ username 'guest' and password 'guest' are hardcoded in the classpath properties file and as Java fallback defaults in Main.java lines 258-259."
+      },
+      "storyPoint": 5
+    }
+  ],
+  "rearchitect": []
+}
