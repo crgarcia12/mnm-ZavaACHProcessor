@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "metadata": {
+    "planName": "plan",
+    "projectName": "ZavaACHProcessor",
+    "language": "java",
+    "createdAt": "2026-05-29T07:57:30.000Z",
+    "version": "1.0"
+  },
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-java",
+      "description": "Upgrade the Java runtime from Java 8 to Java 21 (LTS) to enable modern language features, improved performance, and long-term support on Azure.",
+      "reason": "The application currently targets Java 8 (sourceCompatibility = JavaVersion.VERSION_1_8), which is outdated and unsupported on modern Azure runtimes. Upgrading to Java 21 ensures compatibility with current Azure Container Apps, improved security, and access to modern Java language features.",
+      "requirements": "Upgrade the project Java source and target compatibility from Java 8 to Java 21. Update the Gradle build configuration accordingly. Update the Dockerfile base images from Java 8 (gradle:7.6-jdk8 / eclipse-temurin:8-jre) to Java 21 equivalents. Update the mssql-jdbc dependency from the jre8 variant (mssql-jdbc:12.6.1.jre8) to a version compatible with Java 21. Ensure the project compiles and all existing tests pass after the upgrade.",
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-rabbitmq-amqp-to-servicebus",
+      "description": "Migrate the RabbitMQ AMQP messaging integration to Azure Service Bus for cloud-native, managed message publishing.",
+      "reason": "The application uses RabbitMQ AMQP (amqp-client:5.21.0) to publish ACH processed and failure events to RabbitMQ exchanges (zava.events, zava.dlx). Migrating to Azure Service Bus eliminates the need to manage a RabbitMQ broker and provides a fully managed, scalable, and secure messaging service in Azure.",
+      "requirements": "Replace the RabbitMQ AMQP client dependency with the Azure Service Bus SDK. Migrate the publishRabbitEvent method and related configuration (rabbitmq.host, rabbitmq.port, rabbitmq.username, rabbitmq.password, rabbitmq.vhost, rabbitmq.events.exchange, rabbitmq.deadletter.exchange) to use Azure Service Bus topics or queues. Replace the RabbitMQ connection factory and channel publishing pattern with Azure Service Bus sender client. Use managed identity for authentication to Azure Service Bus. Map existing RabbitMQ exchanges and routing keys to Azure Service Bus topics/subscriptions equivalents.",
+      "dependencies": ["001-upgrade-java"],
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-plaintext-credentials-to-keyvault",
+      "description": "Migrate hardcoded plaintext credentials from the properties file to Azure Key Vault for secure, centralized secret management.",
+      "reason": "The application stores RabbitMQ credentials (username, password) as plaintext in achprocessor.properties. This is a security risk. Migrating to Azure Key Vault with managed identity eliminates hardcoded secrets and enables centralized, auditable secret management.",
+      "requirements": "Identify all plaintext credentials and secrets in the application (rabbitmq.username, rabbitmq.password, and any other sensitive configuration values). Replace direct property access for these credentials with Azure Key Vault secret retrieval using managed identity. Ensure no secrets remain hardcoded in source files or configuration files committed to the repository.",
+      "dependencies": ["001-upgrade-java"],
+      "skills": [
+        {
+          "name": "migration-plaintext-credential-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-local-files-to-azure-storage",
+      "description": "Migrate the local filesystem paths used for ACH file ingestion and processing to Azure-mounted storage paths.",
+      "reason": "The application reads ACH files from local filesystem paths (/shared/ach-incoming, /shared/ach-incoming/processed, /shared/ach-incoming/error). In a cloud-native Azure Container Apps deployment, these paths should be served via Azure-mounted storage (e.g., Azure Files) to ensure data persistence and cloud-native file access.",
+      "requirements": "Update the application configuration for ACH incoming, processed, and error paths to use Azure-mounted storage paths (following the pattern starting with ${AZURE_MOUNT_PATH:/mnt/azure}). Ensure the Dockerfile and deployment configuration mount an Azure Files share to the container at the expected path. Update ACH_INCOMING_PATH, ACH_PROCESSED_PATH, and ACH_ERROR_PATH environment variable defaults to use the Azure-mounted path.",
+      "dependencies": ["001-upgrade-java"],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "security",
+      "id": "005-security-cve-remediation",
+      "description": "Scan all project dependencies for known CVEs and remediate any identified vulnerabilities to ensure the application is secure before deployment.",
+      "reason": "The application uses several third-party dependencies (amqp-client, mssql-jdbc, shadow plugin) which may have known CVEs. Running a CVE scan and remediating vulnerabilities is required before deploying to Azure to ensure the application meets security compliance standards.",
+      "requirements": "Upgrade vulnerable dependencies to the minimum patched version. If a CVE fix requires a major version upgrade, document the affected dependency, the current version, the upgraded major version, and the breaking change risk. Verify that the project builds and all tests pass after remediation.",
+      "dependencies": ["001-upgrade-java", "002-transform-rabbitmq-amqp-to-servicebus", "003-transform-plaintext-credentials-to-keyvault", "004-transform-local-files-to-azure-storage"],
+      "skills": [
+        {
+          "name": "validate-cves-and-fix",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "deployment",
+      "id": "006-deploy-azure-container-apps",
+      "description": "Containerize and deploy the ZavaACHProcessor application to Azure Container Apps.",
+      "reason": "The application needs to be deployed to Azure as a containerized workload. Azure Container Apps provides a fully managed serverless container platform that is well-suited for this polling-based processor application.",
+      "requirements": "Build and publish a container image for the ZavaACHProcessor application. Deploy the application to Azure Container Apps using the existing Dockerfile. Configure managed identity for the container app to access Azure Service Bus and Azure Key Vault. Set required environment variables (ACH paths, ledger URL, Service Bus configuration) in the Container Apps environment. Configure Azure Files mount for ACH file ingestion paths.",
+      "dependencies": ["005-security-cve-remediation"],
+      "targetAzureService": "Azure Container Apps",
+      "resourceStatus": "New resource to be provisioned",
+      "deploymentTool": "bicep",
+      "skills": [
+        {
+          "name": "azcli-containerapp-deploy",
+          "location": "builtin"
+        }
+      ]
+    }
+  ]
+}
