@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generated from givemeaplan using assessment findings.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-secrets-to-keyvault",
+      "description": "Migrate hard-coded application credentials to Azure Key Vault backed secret retrieval.",
+      "reason": "Hard-coded credentials are present in code and configuration and should be removed before modernization.",
+      "requirements": "Addresses issues: CWE-259: Use of Hard-coded Password, CWE-798: Use of Hard-coded Credentials. Remove hard-coded credentials from source/configuration and retrieve required secrets from Azure Key Vault using managed identity.",
+      "dependencies": [],
+      "skills": [
+        {
+          "name": "migration-plaintext-credential-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "security",
+      "id": "002-security-cve-remediation",
+      "description": "Scan dependencies for CVEs and remediate identified vulnerabilities before deployment.",
+      "reason": "Assessment identified a mandatory blocker CVE in SQL Server JDBC dependency that must be remediated.",
+      "requirements": "Addresses issues: CVE-2025-59250: JDBC Driver for SQL Server has improper input validation issue. Upgrade vulnerable dependencies to patched versions, document any major version risk, then verify build and tests pass.",
+      "environmentConfiguration": "Runtime and Gradle build environment from baseline project setup.",
+      "dependencies": [
+        "001-transform-secrets-to-keyvault"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan",
+    "projectName": "mnm-ZavaACHProcessor",
+    "language": "java",
+    "createdAt": "2026-05-29T00:27:53.965Z",
+    "version": "1.0"
+  }
+}
